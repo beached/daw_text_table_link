@@ -66,12 +66,17 @@ namespace daw::text_data {
 } // namespace daw::text_data
 
 int main( int argc, char **argv ) {
-	if( argc <= 1 ) {
-		puts( "Must supply path to worldcitiespop.txt\n" );
-		exit( EXIT_FAILURE );
+	std::vector<char> data_vec{};
+	{
+		if( argc <= 1 ) {
+			puts( "Must supply path to worldcitiespop.txt\n" );
+			exit( EXIT_FAILURE );
+		}
+		auto const data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
+		data_vec.reserve( data.size( ) );
+		std::copy( data.begin( ), data.end( ), std::back_inserter( data_vec ) );
 	}
-	auto const data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
-	auto data_sv = std::string_view( data.data( ), data.size( ) );
+	auto data_sv = std::string_view( data_vec.data( ), data_vec.size( ) );
 
 	using iter_t = daw::text_data::csv_table_iterator<world_cities_pop>;
 	auto first = iter_t( data_sv );
@@ -83,7 +88,7 @@ int main( int argc, char **argv ) {
 	static constexpr std::size_t num_runs = 1;
 #endif
 	daw::bench_n_test_mbs<num_runs>(
-	  "world cities population", data.size( ),
+	  "world cities population", data_sv.size( ),
 	  []( iter_t f ) {
 		  while( f != last ) {
 			  daw::do_not_optimize( *f );
@@ -94,7 +99,7 @@ int main( int argc, char **argv ) {
 
 	std::size_t row_count = 0;
 	daw::bench_n_test_mbs<num_runs>(
-	  "row_count", data.size( ),
+	  "row_count", data_sv.size( ),
 	  [&]( auto rng ) { row_count = daw::text_data::table_row_count( rng ); },
 	  data_sv );
 
