@@ -40,8 +40,8 @@ namespace daw::text_data {
 	};
 } // namespace daw::text_data
 
-constexpr char const text_table0[] = R"("a","s", "d"
-5,"hello", 33
+constexpr char const text_table0[] = R"("a","s",d
+5,  hello, 33
 1,"bye", 44
 )";
 

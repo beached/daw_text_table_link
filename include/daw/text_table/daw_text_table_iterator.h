@@ -66,6 +66,7 @@ namespace daw::text_data {
 		constexpr value_type operator*( ) {
 			if( not m_last_state ) {
 				m_last_state = m_state;
+				return parser_t::template parse_row<T>( m_state, *m_loc_info );
 			}
 			m_state = *m_last_state;
 			return parser_t::template parse_row<T>( m_state, *m_loc_info );

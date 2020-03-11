@@ -37,7 +37,7 @@ namespace daw::text_data {
 
 	template<typename CharType, std::size_t HeaderRow = 0,
 	         std::size_t DataRow = HeaderRow + 1U,
-	         bool SkipLeadingWhiteSpace = false>
+	         bool SkipLeadingWhiteSpace = false, bool EnsureCommaInRow = true>
 	struct basic_csv_table_type {
 		static_assert( NoHeaderRow or DataRow > HeaderRow,
 		               "Header Row must preceed data" );
@@ -51,8 +51,9 @@ namespace daw::text_data {
 		static constexpr CharT escape_char = static_cast<CharT>( '\\' );
 		static constexpr bool has_header = HeaderRow != NoHeaderRow;
 
-		template<typename CharRange>
-		static constexpr void row_move_to_next( CharRange &rng ) {
+		static constexpr void
+		row_move_to_next( daw::basic_string_view<CharT> &rng ) {
+
 			bool is_escaped = false;
 			bool in_quote = false;
 			auto const sz = rng.size( );
@@ -68,7 +69,8 @@ namespace daw::text_data {
 					continue;
 				}
 				if( c == quote_char ) {
-					if( n > 0 and rng[n - 1] == quote_char ) {
+					if( ( sz - n ) > 0 and rng[n + 1] == quote_char ) {
+						++n;
 						continue;
 					}
 					in_quote = not in_quote;
@@ -76,13 +78,20 @@ namespace daw::text_data {
 				}
 				if( c == newline_char ) {
 					rng.remove_prefix( n + 1 );
+					if constexpr( EnsureCommaInRow ) {
+						if( rng.find( delimiter_char ) ==
+						    daw::basic_string_view<CharT>::npos ) {
+
+							rng.remove_prefix( rng.size( ) );
+						}
+					}
 					return;
 				}
 			}
 		}
 
-		template<typename CharRange>
-		static constexpr std::size_t row_move_to_header( CharRange &rng ) {
+		static constexpr std::size_t
+		row_move_to_header( daw::basic_string_view<CharT> &rng ) {
 			// Assumes that there is no escaping prior to header data
 			for( size_t n = 0; n < HeaderRow; ++n ) {
 				(void)rng.pop_front( {&newline_char, 1} );
@@ -90,8 +99,8 @@ namespace daw::text_data {
 			return HeaderRow;
 		}
 
-		template<typename CharRange>
-		static constexpr std::size_t row_move_to_data( CharRange &rng ) {
+		static constexpr std::size_t
+		row_move_to_data( daw::basic_string_view<CharT> &rng ) {
 			auto skip_rows = has_header ? DataRow - HeaderRow : DataRow;
 			daw_text_table_assert( skip_rows == 0 or not rng.empty( ),
 			                       "Unexpected end of data" );
@@ -105,8 +114,8 @@ namespace daw::text_data {
 			return DataRow;
 		}
 
-		template<typename CharRange>
-		static constexpr CharRange column_get_next( CharRange &rng ) {
+		static constexpr daw::basic_string_view<CharT>
+		column_get_next( daw::basic_string_view<CharT> &rng ) {
 			daw_text_table_assert( not rng.empty( ), "Unexpected end of data" );
 
 			auto first = rng.begin( );
@@ -114,8 +123,8 @@ namespace daw::text_data {
 				trim_left( rng );
 			}
 			if( rng.empty( ) ) {
-				return CharRange( first,
-				                  static_cast<std::size_t>( rng.begin( ) - first ) );
+				return daw::basic_string_view<CharT>(
+				  first, static_cast<std::size_t>( rng.begin( ) - first ) );
 			}
 			if( rng.front( ) == quote_char ) {
 				return find_end_of_quoted_cell( first, rng );
@@ -124,34 +133,33 @@ namespace daw::text_data {
 		}
 
 	private:
-		template<typename First, typename CharRange>
-		static constexpr CharRange find_end_of_unquoted_cell( First first,
-		                                                      CharRange &rng ) {
-			(void)rng.pop_front( [is_escaped = false]( CharT c ) mutable {
+		template<typename First>
+		static constexpr daw::basic_string_view<CharT>
+		find_end_of_unquoted_cell( First first,
+		                           daw::basic_string_view<CharT> &rng ) {
+			auto pos = rng.find_first_of_if( [is_escaped = false]( CharT c ) mutable {
 				if( is_escaped ) {
 					is_escaped = false;
 					return false;
 				}
 				is_escaped = c == escape_char;
-				if constexpr( SkipLeadingWhiteSpace ) {
-					return daw::parser::is_unicode_whitespace( c ) or
-					       c == delimiter_char or c == newline_char;
-				} else {
-					return c == delimiter_char or c == newline_char;
-				}
+				return c == delimiter_char or c == newline_char;
 			} );
-			auto result =
-			  CharRange( first, static_cast<std::size_t>( rng.begin( ) - first ) );
-			trim_left( rng );
+			if( pos == daw::basic_string_view<CharT>::npos ) {
+				pos = rng.size( );
+			}
+			rng.remove_prefix( pos );
+			auto result = daw::basic_string_view<CharT>( first, pos );
+
 			if( not rng.empty( ) and rng.front( ) == delimiter_char ) {
-				result.remove_suffix( );
+				rng.remove_prefix( );
 			}
 			return result;
 		}
 
-		template<typename First, typename CharRange>
-		static constexpr CharRange find_end_of_quoted_cell( First first,
-		                                                    CharRange &rng ) {
+		template<typename First>
+		static constexpr daw::basic_string_view<CharT>
+		find_end_of_quoted_cell( First first, daw::basic_string_view<CharT> &rng ) {
 			rng.remove_prefix( );
 			first = rng.begin( );
 			while( not rng.empty( ) ) {
@@ -165,15 +173,14 @@ namespace daw::text_data {
 				}
 				rng.remove_prefix( );
 			}
-			auto result =
-			  CharRange( first, static_cast<std::size_t>( rng.begin( ) - first ) );
+			auto result = daw::basic_string_view<CharT>(
+			  first, static_cast<std::size_t>( rng.begin( ) - first ) );
 			rng.remove_prefix( );
 			column_move_to_next( rng );
 			return result;
 		}
 
-		template<typename CharRange>
-		static constexpr void trim_left( CharRange &rng ) {
+		static constexpr void trim_left( daw::basic_string_view<CharT> &rng ) {
 			auto pos = rng.find_first_of_if( []( CharT c ) {
 				return c == newline_char or not daw::parser::is_unicode_whitespace( c );
 			} );
@@ -182,8 +189,8 @@ namespace daw::text_data {
 			}
 		}
 
-		template<typename CharRange>
-		static constexpr void column_move_to_next( CharRange &rng ) {
+		static constexpr void
+		column_move_to_next( daw::basic_string_view<CharT> &rng ) {
 			trim_left( rng );
 			daw_text_table_assert( rng.front( ) == delimiter_char or
 			                         rng.front( ) == newline_char,

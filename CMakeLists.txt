@@ -75,5 +75,10 @@ add_dependencies(daw_text_table_link_test_bin dependency_stub)
 add_test(NAME daw_text_table_link_test COMMAND daw_text_table_link_test_bin)
 add_dependencies(full daw_text_table_link_test_bin)
 
+add_executable(worldcitiespop_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/worldcitiespop_test.cpp)
+add_dependencies(worldcitiespop_test_bin dependency_stub)
+add_test(NAME worldcitiespop_test COMMAND worldcitiespop_test_bin)
+add_dependencies(full worldcitiespop_test_bin)
+
 install(DIRECTORY ${HEADER_FOLDER}/daw/text_table/ DESTINATION include/daw/text_table/)
 

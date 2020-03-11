@@ -35,13 +35,11 @@
 
 namespace daw::text_data {
 	template<COLUMNNAMETYPE Name, typename T = double,
-	         QuotingOptions HasQuotes = QuotingOptions::Maybe,
 	         NumericRangeCheck RangeCheck = NumericRangeCheck::Never,
 	         typename Constructor = daw::construct_a_t<T>>
 	struct text_number {
 		using i_am_a_text_table_column = void;
 		static constexpr daw::string_view name = Name;
-		static constexpr QuotingOptions has_quotes = HasQuotes;
 		static constexpr NumericRangeCheck range_check = RangeCheck;
 		using column_type = text_table_details::get_numeric_column_type<T>;
 		using parse_to = T;
@@ -49,12 +47,10 @@ namespace daw::text_data {
 	};
 
 	template<COLUMNNAMETYPE Name, typename T, typename FromConverter,
-	         typename ToConverter,
-	         QuotingOptions HasQuotes = QuotingOptions::Maybe>
-	struct text_table_custom {
+	         typename ToConverter>
+	struct text_custom {
 		using i_am_a_text_table_column = void;
 		static constexpr daw::string_view name = Name;
-		static constexpr QuotingOptions has_quotes = HasQuotes;
 		using from_converter = FromConverter;
 		using to_converter = ToConverter;
 		using column_type = text_table_details::TextTableParserTypes::Custom;
@@ -63,13 +59,21 @@ namespace daw::text_data {
 
 	template<COLUMNNAMETYPE Name, typename T = std::string,
 	         typename Constructor = daw::construct_a_t<T>,
-	         typename Appender = text_table_details::basic_appender<T>,
-	         QuotingOptions HasQuotes = QuotingOptions::Maybe>
+	         typename Appender = text_table_details::basic_appender<T>>
 	struct text_string {
 		using i_am_a_text_table_column = void;
 		static constexpr daw::string_view name = Name;
-		static constexpr QuotingOptions has_quotes = HasQuotes;
 		using column_type = text_table_details::TextTableParserTypes::String;
+		using parse_to = T;
+		using constructor = Constructor;
+	};
+
+	template<COLUMNNAMETYPE Name, typename T = std::string_view,
+	         typename Constructor = daw::construct_a_t<T>>
+	struct text_string_raw {
+		using i_am_a_text_table_column = void;
+		static constexpr daw::string_view name = Name;
+		using column_type = text_table_details::TextTableParserTypes::StringRaw;
 		using parse_to = T;
 		using constructor = Constructor;
 	};

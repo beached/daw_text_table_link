@@ -45,7 +45,17 @@ namespace daw::text_data::text_table_details {
 			template<typename TextTableColumn, typename TableType, typename CharT>
 			static constexpr typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
-				rng = TableType::column_get_next( rng );
+				return
+				  typename TextTableColumn::constructor{}( rng.data( ), rng.size( ) );
+			}
+		};
+
+		struct StringRaw {
+			using i_am_a_text_table_parser_type = void;
+
+			template<typename TextTableColumn, typename TableType, typename CharT>
+			static constexpr typename TextTableColumn::parse_to
+			parse_value( daw::basic_string_view<CharT> rng ) {
 				return
 				  typename TextTableColumn::constructor{}( rng.data( ), rng.size( ) );
 			}
@@ -57,12 +67,11 @@ namespace daw::text_data::text_table_details {
 			template<typename TextTableColumn, typename TableType, typename CharT>
 			static typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
-				rng = TableType::column_get_next( rng );
-				CharT *last = rng.end( );
-				float f = str_to_real( rng.begin( ), &last );
+				CharT *last = const_cast<CharT *>( rng.end( ) );
+				float f = str_to_real<typename TextTableColumn::parse_to>( rng.begin( ),
+				                                                           &last );
 				daw_text_table_assert( last != rng.begin( ), "Error parsing float" );
-				rng.remove_prefix( static_cast<std::size_t>( last - rng.begin( ) ) );
-				move_to_next( rng );
+
 				return typename TextTableColumn::constructor{}( f );
 			}
 		};
@@ -73,7 +82,6 @@ namespace daw::text_data::text_table_details {
 			template<typename TextTableColumn, typename TableType, typename CharT>
 			static constexpr typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
-				rng = TableType::skip_column( rng );
 				std::uintmax_t result = 0;
 				auto dig = static_cast<unsigned>( rng.pop_front( ) ) -
 				           static_cast<unsigned>( TableType::zero_char );
@@ -99,7 +107,6 @@ namespace daw::text_data::text_table_details {
 			template<typename TextTableColumn, typename TableType, typename CharT>
 			static constexpr typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
-				rng = TableType::column_get_next( rng );
 				std::intmax_t result = 0;
 				auto dig = static_cast<unsigned>( rng.pop_front( ) ) -
 				           static_cast<unsigned>( TableType::zero_char );
