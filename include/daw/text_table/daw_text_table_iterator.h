@@ -22,7 +22,9 @@
 
 #pragma once
 
-#include "daw_text_table_link.h"
+#include "impl/daw_csv_table.h"
+#include "impl/daw_text_table_link_common.h"
+#include "impl/daw_text_table_link_table_state.h"
 
 #include <optional>
 #include <utility>

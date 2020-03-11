@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include "daw_text_table_iterator.h"
 #include "impl/daw_csv_table.h"
 #include "impl/daw_text_table_link_common.h"
 #include "impl/daw_text_table_link_parsers.h"
@@ -144,6 +145,33 @@ namespace daw::text_data {
 	[[maybe_unused, nodiscard]] constexpr Container
 	parse_csv_table( std::basic_string_view<wchar_t> rng ) {
 		return parse_csv_table_impl<T, Container, Constructor, Appender>(
+		  daw::basic_string_view<wchar_t>( rng.data( ), rng.size( ) ) );
+	}
+
+	template<typename TableType, typename CharT>
+	[[maybe_unused, nodiscard]] constexpr std::size_t
+	table_row_count_impl( daw::basic_string_view<CharT> rng ) {
+
+		auto state = TableState<TableType>( rng );
+		std::size_t result = 0;
+		while( not state.at_eof( ) ) {
+			++result;
+			state.row_move_to_next( );
+		}
+		return result;
+	}
+
+	template<typename TableType = basic_csv_table_type<char>>
+	[[maybe_unused, nodiscard]] constexpr std::size_t
+	table_row_count( std::basic_string_view<char> rng ) {
+		return table_row_count_impl<TableType>(
+		  daw::basic_string_view<char>( rng.data( ), rng.size( ) ) );
+	}
+
+	template<typename TableType = basic_csv_table_type<wchar_t>>
+	[[maybe_unused, nodiscard]] constexpr std::size_t
+	table_row_count( std::basic_string_view<wchar_t> rng ) {
+		return table_row_count_impl<TableType>(
 		  daw::basic_string_view<wchar_t>( rng.data( ), rng.size( ) ) );
 	}
 } // namespace daw::text_data

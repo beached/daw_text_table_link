@@ -73,11 +73,8 @@ int main( int argc, char **argv ) {
 	auto data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
 
 	using iter_t = daw::text_data::csv_table_iterator<world_cities_pop>;
-	using iter2_t = daw::text_data::csv_table_iterator<empty>;
 	auto first = iter_t( {data.data( ), data.size( )} );
-	auto first2 = iter2_t( {data.data( ), data.size( )} );
 	static constexpr auto last = iter_t( );
-	static constexpr auto last2 = iter2_t( );
 
 #ifdef NDEBUG
 	static constexpr std::size_t num_runs = 10;
@@ -94,12 +91,10 @@ int main( int argc, char **argv ) {
 	  },
 	  first );
 
-	std::size_t row_count = 0;
-	daw::bench_n_test_mbs<num_runs>(
-	  "row_count", data.size( ),
-	  [&row_count]( iter2_t f ) {
-		  row_count = static_cast<std::size_t>( std::distance( f, last2 ) );
-	  },
-	  first2 );
+	std::size_t row_count =
+	  *daw::bench_n_test_mbs<num_runs>( "row_count", data.size( ), [&data] {
+		  return daw::text_data::table_row_count( data );
+	  } );
+
 	daw::do_not_optimize( row_count );
 }
