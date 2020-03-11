@@ -70,10 +70,11 @@ int main( int argc, char **argv ) {
 		puts( "Must supply path to worldcitiespop.txt\n" );
 		exit( EXIT_FAILURE );
 	}
-	auto data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
+	auto const data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
+	auto data_sv = std::string_view( data.data( ), data.size( ) );
 
 	using iter_t = daw::text_data::csv_table_iterator<world_cities_pop>;
-	auto first = iter_t( {data.data( ), data.size( )} );
+	auto first = iter_t( data_sv );
 	static constexpr auto last = iter_t( );
 
 #ifdef NDEBUG
@@ -91,10 +92,11 @@ int main( int argc, char **argv ) {
 	  },
 	  first );
 
-	std::size_t row_count =
-	  *daw::bench_n_test_mbs<num_runs>( "row_count", data.size( ), [&data] {
-		  return daw::text_data::table_row_count( data );
-	  } );
+	std::size_t row_count = 0;
+	daw::bench_n_test_mbs<num_runs>(
+	  "row_count", data.size( ),
+	  [&]( auto rng ) { row_count = daw::text_data::table_row_count( rng ); },
+	  data_sv );
 
 	daw::do_not_optimize( row_count );
 }
