@@ -56,7 +56,7 @@ constexpr int sum_test( ) {
 	}
 	return v1;
 }
-//static_assert( sum_test( ) == 6 );
+static_assert( sum_test( ) == 6 );
 
 int main( ) {
 	auto tbl = daw::text_data::parse_csv_table<test_001>( text_table0 );
@@ -67,7 +67,8 @@ int main( ) {
 	constexpr auto last = iter_t( );
 	int v1 = 0;
 	while( first != last ) {
-		v1 += first->n;
+		v1 += (*first).n;
+		first.operator++( );
 		++first;
 	}
 	daw_text_table_assert( v0 == v1, "Expected same" );

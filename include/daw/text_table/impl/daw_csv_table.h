@@ -81,7 +81,7 @@ namespace daw::text_data {
 					in_quote = not in_quote;
 					continue;
 				}
-				if( c == newline_char ) {
+				if( not in_quote and c == newline_char ) {
 					rng.remove_prefix( n + 1 );
 					if constexpr( EnsureCommaInRow ) {
 						if( rng.find( delimiter_char ) ==

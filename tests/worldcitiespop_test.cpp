@@ -93,4 +93,8 @@ int main( int argc, char **argv ) {
 	  data_sv );
 
 	daw::do_not_optimize( row_count );
+
+	auto tbl = daw::text_data::parse_csv_table<world_cities_pop>( data_sv );
+	daw_text_table_assert( row_count == tbl.size( ),
+	                       "Unexpected difference in row counts" );
 }

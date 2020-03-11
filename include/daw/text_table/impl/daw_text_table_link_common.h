@@ -383,8 +383,8 @@ namespace daw::text_data {
 			  find_cell<N, TableType>( state, loc_info ) );
 		}
 
-		template<typename T, typename... TextTableColumns, std::size_t... Is,
-		         typename TableType>
+		template<typename T, bool MoveToNext, typename... TextTableColumns,
+		         std::size_t... Is, typename TableType>
 		constexpr T
 		parse_table_row( TableState<TableType> &state,
 		                 locations_info_t<typename TableType::CharT,
@@ -400,7 +400,9 @@ namespace daw::text_data {
 			auto result = std::apply(
 			  daw::construct_a_t<T>{},
 			  tp_t{parse_cell<TextTableColumns, Is>( state, loc_info )...} );
-			state.row_move_to_next( );
+			if constexpr( MoveToNext ) {
+				state.row_move_to_next( );
+			}
 			return result;
 		}
 	} // namespace text_table_details

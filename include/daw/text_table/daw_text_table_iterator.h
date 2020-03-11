@@ -68,10 +68,10 @@ namespace daw::text_data {
 		constexpr value_type operator*( ) {
 			if( not m_last_state ) {
 				m_last_state = std::optional<TableState<TableType>>( m_state );
-				return parser_t::template parse_row<T>( m_state, *m_loc_info );
+				return parser_t::template parse_row<T, false>( m_state, *m_loc_info );
 			}
 			m_state = *m_last_state;
-			return parser_t::template parse_row<T>( m_state, *m_loc_info );
+			return parser_t::template parse_row<T, false>( m_state, *m_loc_info );
 		}
 
 		constexpr pointer operator->( ) {

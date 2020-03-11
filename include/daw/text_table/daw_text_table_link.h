@@ -105,12 +105,14 @@ namespace daw::text_data {
 			  state );
 		}
 
-		template<typename T, typename TableType, typename CharT>
+		template<typename T, bool MoveToNext = true, typename TableType,
+		         typename CharT>
 		[[nodiscard]] static constexpr T
 		parse_row( TableState<TableType> &state,
 		           text_table_details::locations_info_t<CharT, TextTableColumns...>
 		             &loc_info ) {
-			return text_table_details::parse_table_row<T, TextTableColumns...>(
+			return text_table_details::parse_table_row<T, MoveToNext,
+			                                           TextTableColumns...>(
 			  state, loc_info, std::index_sequence_for<TextTableColumns...>{} );
 		}
 	}; // namespace daw::text_data
@@ -157,6 +159,7 @@ namespace daw::text_data {
 	table_row_count_impl( daw::basic_string_view<CharT> rng ) {
 
 		auto state = TableState<TableType>( rng );
+		state.row_move_to_data();
 		std::size_t result = 0;
 		while( not state.at_eof( ) ) {
 			++result;
