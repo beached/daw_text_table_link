@@ -67,7 +67,7 @@ namespace daw::text_data {
 
 		constexpr value_type operator*( ) {
 			if( not m_last_state ) {
-				m_last_state = m_state;
+				m_last_state = std::optional<TableState<TableType>>( m_state );
 				return parser_t::template parse_row<T>( m_state, *m_loc_info );
 			}
 			m_state = *m_last_state;
@@ -80,7 +80,7 @@ namespace daw::text_data {
 
 		constexpr basic_text_table_iterator &operator++( ) {
 			m_state.row_move_to_next( );
-			m_last_state.reset( );
+			m_last_state = std::optional<TableState<TableType>>( );
 			return *this;
 		}
 

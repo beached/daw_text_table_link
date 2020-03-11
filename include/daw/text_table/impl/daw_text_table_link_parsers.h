@@ -24,12 +24,12 @@
 
 #include "daw_text_table_assert.h"
 #include "daw_text_table_link_common.h"
-#include "daw_text_table_link_parser_helpers.h"
 
 #include <daw/cpp_17.h>
 #include <daw/daw_parser_helper_sv.h>
 #include <daw/daw_utility.h>
 
+#include <absl/strings/charconv.h>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -67,12 +67,22 @@ namespace daw::text_data::text_table_details {
 			template<typename TextTableColumn, typename TableType, typename CharT>
 			static typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
-				CharT *last = const_cast<CharT *>( rng.end( ) );
-				float f = str_to_real<typename TextTableColumn::parse_to>( rng.begin( ),
-				                                                           &last );
-				daw_text_table_assert( last != rng.begin( ), "Error parsing float" );
+				typename TextTableColumn::parse_to result = 0.0;
+				auto const abresult = absl::from_chars(
+				  rng.data( ), rng.data( ) + static_cast<std::ptrdiff_t>( rng.size( ) ),
+				  result );
 
-				return typename TextTableColumn::constructor{}( f );
+				switch( abresult.ec ) {
+				case std::errc::invalid_argument:
+					daw_text_table_error( "Invalid floating point number" );
+					break;
+				case std::errc::result_out_of_range:
+					daw_text_table_error( "Number out of range" );
+					break;
+				default:
+					break;
+				}
+				return typename TextTableColumn::constructor{}( result );
 			}
 		};
 

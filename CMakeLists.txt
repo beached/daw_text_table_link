@@ -61,7 +61,6 @@ set(HEADER_FILES
         ${HEADER_FOLDER}/daw/text_table/impl/daw_text_table_assert.h
         ${HEADER_FOLDER}/daw/text_table/impl/daw_text_table_link_common.h
         ${HEADER_FOLDER}/daw/text_table/impl/daw_text_table_link_parsers.h
-        ${HEADER_FOLDER}/daw/text_table/impl/daw_text_table_link_parser_helpers.h
         ${HEADER_FOLDER}/daw/text_table/impl/daw_csv_table.h
         ${HEADER_FOLDER}/daw/text_table/impl/daw_text_table_link_table_state.h
 )
@@ -71,11 +70,13 @@ add_custom_target(full)
 add_dependencies(check full)
 
 add_executable(daw_text_table_link_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/daw_text_table_link_test.cpp)
+target_link_libraries( daw_text_table_link_test_bin absl_base absl_throw_delegate absl_strings )
 add_dependencies(daw_text_table_link_test_bin dependency_stub)
 add_test(NAME daw_text_table_link_test COMMAND daw_text_table_link_test_bin)
 add_dependencies(full daw_text_table_link_test_bin)
 
 add_executable(worldcitiespop_test_bin EXCLUDE_FROM_ALL ${HEADER_FILES} ${TEST_FOLDER}/worldcitiespop_test.cpp)
+target_link_libraries( worldcitiespop_test_bin absl_base absl_throw_delegate absl_strings )
 add_dependencies(worldcitiespop_test_bin dependency_stub)
 add_test(NAME worldcitiespop_test COMMAND worldcitiespop_test_bin)
 add_dependencies(full worldcitiespop_test_bin)

@@ -26,6 +26,7 @@
 #include "daw_text_table_link_table_state.h"
 
 #include <daw/cpp_17.h>
+#include <daw/daw_algorithm.h>
 #include <daw/daw_parser_helper_sv.h>
 #include <daw/daw_string_view.h>
 #include <daw/daw_utility.h>
@@ -279,10 +280,11 @@ namespace daw::text_data {
 
 			constexpr std::optional<std::size_t>
 			find_name( daw::basic_string_view<CharT> name ) const {
-				auto pos = std::find_if( locations.begin( ), locations.end( ),
-				                         [name]( location_info_t<CharT> const &item ) {
-					                         return name == item.name;
-				                         } );
+				auto pos = daw::algorithm::find_if(
+				  locations.begin( ), locations.end( ),
+				  [name]( location_info_t<CharT> const &item ) {
+					  return name == item.name;
+				  } );
 				if( pos == locations.end( ) ) {
 					return {};
 				}

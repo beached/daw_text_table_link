@@ -36,11 +36,9 @@ struct world_cities_pop {
 	std::string_view accentcity;
 	std::string_view region;
 	std::string_view population;
-	std::string_view latitude;
-	std::string_view longitude;
+	double latitude;
+	double longitude;
 };
-
-struct empty {};
 
 namespace daw::text_data {
 	template<>
@@ -55,28 +53,18 @@ namespace daw::text_data {
 		using type =
 		  text_column_list<text_string_raw<country>, text_string_raw<city>,
 		                   text_string_raw<accentcity>, text_string_raw<region>,
-		                   text_string_raw<population>, text_string_raw<latitude>,
-		                   text_string_raw<longitude>>;
-	};
-
-	template<>
-	struct text_data_contract<empty> {
-		using type = text_column_list<>;
+		                   text_string_raw<population>, text_number<latitude, double>,
+		                   text_number<longitude, double>>;
 	};
 } // namespace daw::text_data
 
 int main( int argc, char **argv ) {
-	std::vector<char> data_vec{};
-	{
-		if( argc <= 1 ) {
-			puts( "Must supply path to worldcitiespop.txt\n" );
-			exit( EXIT_FAILURE );
-		}
-		auto const data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
-		data_vec.reserve( data.size( ) );
-		std::copy( data.begin( ), data.end( ), std::back_inserter( data_vec ) );
+	if( argc <= 1 ) {
+		puts( "Must supply path to worldcitiespop.txt\n" );
+		exit( EXIT_FAILURE );
 	}
-	auto data_sv = std::string_view( data_vec.data( ), data_vec.size( ) );
+	auto const data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
+	auto data_sv = std::string_view( data.data( ), data.size( ) );
 
 	using iter_t = daw::text_data::csv_table_iterator<world_cities_pop>;
 	auto first = iter_t( data_sv );

@@ -7,6 +7,12 @@
 			"download_type": "git",
 			"build_type": "cmake",
 			"uri": "https://github.com/beached/header_libraries.git"
+		},
+		{
+			"provides": "abseil_cpp",
+			"download_type": "git",
+			"build_type": "cmake",
+			"uri": "https://github.com/abseil/abseil-cpp.git"
 		}
 	]
 }

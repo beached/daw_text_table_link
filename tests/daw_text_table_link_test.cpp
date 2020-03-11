@@ -27,7 +27,7 @@
 
 struct test_001 {
 	int n;
-	std::string s;
+	std::string_view s;
 };
 
 namespace daw::text_data {
@@ -36,7 +36,7 @@ namespace daw::text_data {
 		static constexpr char const a[] = "a";
 		static constexpr char const s[] = "s";
 
-		using type = text_column_list<text_number<a, int>, text_string<s>>;
+		using type = text_column_list<text_number<a, int>, text_string_raw<s>>;
 	};
 } // namespace daw::text_data
 
@@ -44,6 +44,19 @@ constexpr char const text_table0[] = R"("a","s",d
 5,  hello, 33
 1,"bye", 44
 )";
+
+constexpr int sum_test( ) {
+	using iter_t = daw::text_data::csv_table_iterator<test_001>;
+	auto first = iter_t( text_table0 );
+	constexpr auto last = iter_t( );
+	int v1 = 0;
+	while( first != last ) {
+		v1 += first->n;
+		++first;
+	}
+	return v1;
+}
+//static_assert( sum_test( ) == 6 );
 
 int main( ) {
 	auto tbl = daw::text_data::parse_csv_table<test_001>( text_table0 );
