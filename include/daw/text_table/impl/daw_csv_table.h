@@ -37,7 +37,8 @@ namespace daw::text_data {
 
 	template<typename CharType, std::size_t HeaderRow = 0,
 	         std::size_t DataRow = HeaderRow + 1U,
-	         bool SkipLeadingWhiteSpace = false, bool EnsureCommaInRow = true>
+	         bool SkipLeadingWhiteSpace = false, bool EnsureCommaInRow = true,
+	         bool AllowEscaped = false>
 	struct basic_csv_table_type {
 		static_assert( NoHeaderRow or DataRow > HeaderRow,
 		               "Header Row must preceed data" );
@@ -59,14 +60,18 @@ namespace daw::text_data {
 			auto const sz = rng.size( );
 
 			for( std::size_t n = 0; n < sz; ++n ) {
-				if( is_escaped ) {
-					is_escaped = false;
-					continue;
+				if constexpr( AllowEscaped ) {
+					if( is_escaped ) {
+						is_escaped = false;
+						continue;
+					}
 				}
 				auto const c = rng[n];
-				if( c == escape_char ) {
-					is_escaped = true;
-					continue;
+				if constexpr( AllowEscaped ) {
+					if( c == escape_char ) {
+						is_escaped = true;
+						continue;
+					}
 				}
 				if( c == quote_char ) {
 					if( ( sz - n ) > 0 and rng[n + 1] == quote_char ) {
@@ -137,12 +142,15 @@ namespace daw::text_data {
 		static constexpr daw::basic_string_view<CharT>
 		find_end_of_unquoted_cell( First first,
 		                           daw::basic_string_view<CharT> &rng ) {
-			auto pos = rng.find_first_of_if( [is_escaped = false]( CharT c ) mutable {
-				if( is_escaped ) {
-					is_escaped = false;
-					return false;
+			bool is_escaped = false;
+			auto pos = rng.find_first_of_if( [&]( CharT c ) {
+				if constexpr( AllowEscaped ) {
+					if( is_escaped ) {
+						is_escaped = false;
+						return false;
+					}
+					is_escaped = c == escape_char;
 				}
-				is_escaped = c == escape_char;
 				return c == delimiter_char or c == newline_char;
 			} );
 			if( pos == daw::basic_string_view<CharT>::npos ) {
