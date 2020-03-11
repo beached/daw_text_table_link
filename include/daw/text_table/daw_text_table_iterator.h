@@ -80,7 +80,9 @@ namespace daw::text_data {
 
 		constexpr basic_text_table_iterator &operator++( ) {
 			m_state.row_move_to_next( );
-			m_last_state = std::optional<TableState<TableType>>( );
+			if( m_last_state ) {
+				m_last_state = std::optional<TableState<TableType>>( );
+			}
 			return *this;
 		}
 
@@ -91,7 +93,7 @@ namespace daw::text_data {
 		}
 
 		[[nodiscard]] explicit constexpr operator bool( ) const {
-			return m_state.at_eof( );
+			return not m_state.at_eof( );
 		}
 
 		constexpr bool operator==( basic_text_table_iterator const &rhs ) const {

@@ -159,7 +159,7 @@ namespace daw::text_data {
 	table_row_count_impl( daw::basic_string_view<CharT> rng ) {
 
 		auto state = TableState<TableType>( rng );
-		state.row_move_to_data();
+		state.row_move_to_data( );
 		std::size_t result = 0;
 		while( not state.at_eof( ) ) {
 			++result;
@@ -181,4 +181,33 @@ namespace daw::text_data {
 		return table_row_count_impl<TableType>(
 		  daw::basic_string_view<wchar_t>( rng.data( ), rng.size( ) ) );
 	}
+
+	template<typename TableType, typename CharT>
+	[[maybe_unused, nodiscard]] constexpr std::size_t
+	table_column_count_impl( daw::basic_string_view<CharT> rng ) {
+
+		auto state = TableState<TableType>( rng );
+		state.row_move_to_data( );
+		std::size_t result = 0;
+		while( not state.at_eol( ) ) {
+			++result;
+			(void)state.column_get_next( );
+		}
+		return result;
+	}
+
+	template<typename TableType = basic_csv_table_type<char>>
+	[[maybe_unused, nodiscard]] constexpr std::size_t
+	table_column_count( std::basic_string_view<char> rng ) {
+		return table_column_count_impl<TableType>(
+		  daw::basic_string_view<char>( rng.data( ), rng.size( ) ) );
+	}
+
+	template<typename TableType = basic_csv_table_type<wchar_t>>
+	[[maybe_unused, nodiscard]] constexpr std::size_t
+	table_column_count( std::basic_string_view<wchar_t> rng ) {
+		return table_column_count_impl<TableType>(
+		  daw::basic_string_view<wchar_t>( rng.data( ), rng.size( ) ) );
+	}
+
 } // namespace daw::text_data

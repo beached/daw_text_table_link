@@ -40,6 +40,16 @@ struct world_cities_pop {
 	double longitude;
 };
 
+struct world_cities_pop2 {
+	std::string_view country;
+	std::string_view city;
+	std::string_view accentcity;
+	std::string_view region;
+	std::string_view population;
+	std::string_view latitude;
+	std::string_view longitude;
+};
+
 namespace daw::text_data {
 	template<>
 	struct text_data_contract<world_cities_pop> {
@@ -57,6 +67,23 @@ namespace daw::text_data {
 		              AllowEmpty::Allowed>,
 		  text_number<latitude, double>, text_number<longitude, double>>;
 	};
+
+	template<>
+	struct text_data_contract<world_cities_pop2> {
+		static constexpr char const country[] = "Country";
+		static constexpr char const city[] = "City";
+		static constexpr char const accentcity[] = "AccentCity";
+		static constexpr char const region[] = "Region";
+		static constexpr char const population[] = "Population";
+		static constexpr char const latitude[] = "Latitude";
+		static constexpr char const longitude[] = "Longitude";
+		using type =
+		  text_column_list<text_string_raw<country>, text_string_raw<city>,
+		                   text_string_raw<accentcity>, text_string_raw<region>,
+		                   text_string_raw<population>, text_string_raw<latitude>,
+		                   text_string_raw<longitude>>;
+	};
+
 } // namespace daw::text_data
 
 int main( int argc, char **argv ) {
@@ -68,7 +95,9 @@ int main( int argc, char **argv ) {
 	auto data_sv = std::string_view( data.data( ), data.size( ) );
 
 	using iter_t = daw::text_data::csv_table_iterator<world_cities_pop>;
+	using iter2_t = daw::text_data::csv_table_iterator<world_cities_pop2>;
 	auto first = iter_t( data_sv );
+	auto first2 = iter2_t( data_sv );
 	static constexpr auto last = iter_t( );
 
 #ifdef NDEBUG
@@ -86,6 +115,16 @@ int main( int argc, char **argv ) {
 	  },
 	  first );
 
+	daw::bench_n_test_mbs<num_runs>(
+	  "world cities population - string_view", data_sv.size( ),
+	  []( iter2_t f ) {
+		  while( f ) {
+			  daw::do_not_optimize( *f );
+			  ++f;
+		  }
+	  },
+	  first2 );
+
 	std::size_t row_count = 0;
 	daw::bench_n_test_mbs<num_runs>(
 	  "row_count", data_sv.size( ),
@@ -93,6 +132,9 @@ int main( int argc, char **argv ) {
 	  data_sv );
 
 	daw::do_not_optimize( row_count );
+
+	auto col_count = daw::text_data::table_column_count( data_sv );
+	daw_text_table_assert( col_count == 7, "Expected 7 columns" );
 
 	auto tbl = daw::text_data::parse_csv_table<world_cities_pop>( data_sv );
 	daw_text_table_assert( row_count == tbl.size( ),
