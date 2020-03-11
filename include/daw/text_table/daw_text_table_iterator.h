@@ -77,9 +77,7 @@ namespace daw::text_data {
 		}
 
 		constexpr basic_text_table_iterator &operator++( ) {
-			if( not m_last_state ) {
-				(void)m_state.column_get_next( );
-			}
+			m_state.row_move_to_next( );
 			m_last_state.reset( );
 			return *this;
 		}

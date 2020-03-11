@@ -108,7 +108,7 @@ namespace daw::text_data {
 			return text_table_details::parse_table_row<T, TextTableColumns...>(
 			  state, loc_info, std::index_sequence_for<TextTableColumns...>{} );
 		}
-	};
+	}; // namespace daw::text_data
 
 	template<typename T, typename Container, typename Constructor,
 	         typename Appender, typename CharT>

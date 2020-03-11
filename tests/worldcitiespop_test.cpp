@@ -27,6 +27,7 @@
 #include <daw/daw_memory_mapped_file.h>
 
 #include <cstdio>
+#include <iterator>
 #include <string>
 
 struct world_cities_pop {
@@ -39,11 +40,7 @@ struct world_cities_pop {
 	std::string_view longitude;
 };
 
-struct world_cities {
-	std::string_view country;
-	std::string_view city;
-	std::string_view longitude;
-};
+struct empty {};
 
 namespace daw::text_data {
 	template<>
@@ -63,14 +60,11 @@ namespace daw::text_data {
 	};
 
 	template<>
-	struct text_data_contract<world_cities> {
-		static constexpr char const country[] = "Country";
-		static constexpr char const city[] = "City";
-		using type =
-		  text_column_list<text_string_raw<country>, text_string_raw<city>>;
+	struct text_data_contract<empty> {
+		using type = text_column_list<>;
 	};
-
 } // namespace daw::text_data
+
 int main( int argc, char **argv ) {
 	if( argc <= 1 ) {
 		puts( "Must supply path to worldcitiespop.txt\n" );
@@ -79,13 +73,18 @@ int main( int argc, char **argv ) {
 	auto data = daw::filesystem::memory_mapped_file_t<>( argv[1] );
 
 	using iter_t = daw::text_data::csv_table_iterator<world_cities_pop>;
-	using iter2_t = daw::text_data::csv_table_iterator<world_cities_pop>;
+	using iter2_t = daw::text_data::csv_table_iterator<empty>;
 	auto first = iter_t( {data.data( ), data.size( )} );
 	auto first2 = iter2_t( {data.data( ), data.size( )} );
 	static constexpr auto last = iter_t( );
 	static constexpr auto last2 = iter2_t( );
 
-	daw::bench_n_test_mbs<10>(
+#ifdef NDEBUG
+	static constexpr std::size_t num_runs = 10;
+#else
+	static constexpr std::size_t num_runs = 1;
+#endif
+	daw::bench_n_test_mbs<num_runs>(
 	  "world cities population", data.size( ),
 	  []( iter_t f ) {
 		  while( f != last ) {
@@ -95,13 +94,12 @@ int main( int argc, char **argv ) {
 	  },
 	  first );
 
-	daw::bench_n_test_mbs<10>(
-	  "world cities", data.size( ),
-	  []( iter2_t f ) {
-		  while( f != last2 ) {
-			  daw::do_not_optimize( *f );
-			  ++f;
-		  }
+	std::size_t row_count = 0;
+	daw::bench_n_test_mbs<num_runs>(
+	  "row_count", data.size( ),
+	  [&row_count]( iter2_t f ) {
+		  row_count = static_cast<std::size_t>( std::distance( f, last2 ) );
 	  },
 	  first2 );
+	daw::do_not_optimize( row_count );
 }
