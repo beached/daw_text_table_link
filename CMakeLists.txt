@@ -82,4 +82,3 @@ add_test(NAME worldcitiespop_test COMMAND worldcitiespop_test_bin)
 add_dependencies(full worldcitiespop_test_bin)
 
 install(DIRECTORY ${HEADER_FOLDER}/daw/text_table/ DESTINATION include/daw/text_table/)
-
