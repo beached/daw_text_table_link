@@ -37,11 +37,15 @@
 namespace daw::text_data {
 	template<COLUMNNAMETYPE Name, typename T = double,
 	         NumericRangeCheck RangeCheck = NumericRangeCheck::Never,
+	         AllowEmpty EmptyValues = AllowEmpty::MustHaveNumber,
 	         typename Constructor = daw::construct_a_t<T>>
 	struct text_number {
 		using i_am_a_text_table_column = void;
 		static constexpr daw::string_view name = Name;
 		static constexpr NumericRangeCheck range_check = RangeCheck;
+		static constexpr AllowEmpty empty_allowed = EmptyValues;
+		static_assert( empty_allowed == AllowEmpty::MustHaveNumber or
+		               std::is_invocable_v<Constructor> );
 		using column_type = text_table_details::get_numeric_column_type<T>;
 		using parse_to = T;
 		using constructor = Constructor;

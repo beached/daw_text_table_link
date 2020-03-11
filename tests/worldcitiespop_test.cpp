@@ -35,7 +35,7 @@ struct world_cities_pop {
 	std::string_view city;
 	std::string_view accentcity;
 	std::string_view region;
-	std::string_view population;
+	std::size_t population;
 	double latitude;
 	double longitude;
 };
@@ -50,11 +50,12 @@ namespace daw::text_data {
 		static constexpr char const population[] = "Population";
 		static constexpr char const latitude[] = "Latitude";
 		static constexpr char const longitude[] = "Longitude";
-		using type =
-		  text_column_list<text_string_raw<country>, text_string_raw<city>,
-		                   text_string_raw<accentcity>, text_string_raw<region>,
-		                   text_string_raw<population>, text_number<latitude, double>,
-		                   text_number<longitude, double>>;
+		using type = text_column_list<
+		  text_string_raw<country>, text_string_raw<city>,
+		  text_string_raw<accentcity>, text_string_raw<region>,
+		  text_number<population, std::size_t, NumericRangeCheck::Never,
+		              AllowEmpty::Allowed>,
+		  text_number<latitude, double>, text_number<longitude, double>>;
 	};
 } // namespace daw::text_data
 

@@ -145,6 +145,8 @@ namespace daw::text_data {
 		CheckForNarrowing = true
 	};
 
+	enum class AllowEmpty : bool { MustHaveNumber = false, Allowed = true };
+
 	namespace text_table_details {
 		/***
 		 * Attempt to parse/serialize a type that has not yet been mapped

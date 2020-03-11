@@ -42,7 +42,7 @@ namespace daw::text_data::text_table_details {
 		struct String {
 			using i_am_a_text_table_parser_type = void;
 
-			template<typename TextTableColumn, typename TableType, typename CharT>
+			template<typename TextTableColumn, typename, typename CharT>
 			static constexpr typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
 				return
@@ -53,7 +53,7 @@ namespace daw::text_data::text_table_details {
 		struct StringRaw {
 			using i_am_a_text_table_parser_type = void;
 
-			template<typename TextTableColumn, typename TableType, typename CharT>
+			template<typename TextTableColumn, typename, typename CharT>
 			static constexpr typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
 				return
@@ -64,10 +64,20 @@ namespace daw::text_data::text_table_details {
 		struct Real {
 			using i_am_a_text_table_parser_type = void;
 
-			template<typename TextTableColumn, typename TableType, typename CharT>
+			template<typename TextTableColumn, typename, typename CharT>
 			static typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
-				typename TextTableColumn::parse_to result = 0.0;
+				using constructor_t = typename TextTableColumn::constructor;
+
+				if constexpr( TextTableColumn::empty_allowed == AllowEmpty::Allowed ) {
+					rng = daw::parser::trim_left( rng );
+					if( rng.empty( ) ) {
+						return constructor_t{}( );
+					}
+				}
+
+				using real_t = typename TextTableColumn::parse_to;
+				real_t result = std::numeric_limits<real_t>::quiet_NaN( );
 				auto const abresult = absl::from_chars(
 				  rng.data( ), rng.data( ) + static_cast<std::ptrdiff_t>( rng.size( ) ),
 				  result );
@@ -77,12 +87,15 @@ namespace daw::text_data::text_table_details {
 					daw_text_table_error( "Invalid floating point number" );
 					break;
 				case std::errc::result_out_of_range:
-					daw_text_table_error( "Number out of range" );
+					if constexpr( TextTableColumn::range_check ==
+					              NumericRangeCheck::CheckForNarrowing ) {
+						daw_text_table_error( "Number out of range" );
+					}
 					break;
 				default:
 					break;
 				}
-				return typename TextTableColumn::constructor{}( result );
+				return constructor_t{}( result );
 			}
 		};
 
@@ -92,6 +105,14 @@ namespace daw::text_data::text_table_details {
 			template<typename TextTableColumn, typename TableType, typename CharT>
 			static constexpr typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
+				using constructor_t = typename TextTableColumn::constructor;
+
+				if constexpr( TextTableColumn::empty_allowed == AllowEmpty::Allowed ) {
+					rng = daw::parser::trim_left( rng );
+					if( rng.empty( ) ) {
+						return constructor_t{}( );
+					}
+				}
 				std::uintmax_t result = 0;
 				auto dig = static_cast<unsigned>( rng.pop_front( ) ) -
 				           static_cast<unsigned>( TableType::zero_char );
@@ -117,6 +138,14 @@ namespace daw::text_data::text_table_details {
 			template<typename TextTableColumn, typename TableType, typename CharT>
 			static constexpr typename TextTableColumn::parse_to
 			parse_value( daw::basic_string_view<CharT> rng ) {
+				using constructor_t = typename TextTableColumn::constructor;
+
+				if constexpr( TextTableColumn::empty_allowed == AllowEmpty::Allowed ) {
+					rng = daw::parser::trim_left( rng );
+					if( rng.empty( ) ) {
+						return constructor_t{}( );
+					}
+				}
 				std::intmax_t result = 0;
 				auto dig = static_cast<unsigned>( rng.pop_front( ) ) -
 				           static_cast<unsigned>( TableType::zero_char );
